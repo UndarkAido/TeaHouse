@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tea House</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        div {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            /* transition: all 2s ease; */
+        }
+
+        #canvastile {
+            background: #334029 repeat;
+            overflow: hidden;
+        }
+
+        #headertile {
+            background: transparent repeat-x;
+        }
+
+        #header {
+            background: transparent no-repeat left top;
+        }
+
+        #footertile {
+            background: transparent repeat-x right bottom;
+        }
+
+        #footer {
+            background: transparent no-repeat right bottom;
+        }
+    </style>
+</head>
+<body>
+<div id="canvastile"></div>
+<div id="headertile"></div>
+<div id="header"></div>
+<div id="footertile"></div>
+<div id="footer"></div>
+<script>
+    const baseURL = "https://ssl.gstatic.com/ui/v1/icons/mail/themes/teahouse";
+
+    function setHour(hour) {
+        hour = ((hour % 24) + 24) % 24;
+        if (hour !== 3) {
+            hour -= hour % 2;
+        }
+        let hour2 = hour !== 10 && hour !== 2 + 12 ? hour : hour - 2;
+
+        hour = hour === 3 ? "314am" : hour < 12 ? hour + "am" : hour - 12 + "pm";
+        hour2 = hour2 === 3 ? "314am" : hour2 < 12 ? hour2 + "am" : hour2 - 12 + "pm";
+
+        hour = hour === "0am" ? "midnight" : hour;
+        hour = hour === "0pm" ? "noon" : hour;
+        hour2 = hour2 === "0am" ? "midnight" : hour2;
+        hour2 = hour2 === "0pm" ? "noon" : hour2;
+
+        document.getElementById("canvastile").style.backgroundImage = `url(${baseURL}/${hour2}/canvastile_bg.jpg)`;
+        document.getElementById("headertile").style.backgroundImage = `url(${baseURL}/${hour2}/headertile_bg.jpg)`;
+        document.getElementById("header").style.backgroundImage = hour2 !== "6am" && hour2 !== "6pm" && hour2 !== "8pm" ? `url(${baseURL}/${hour2}/header_bg.jpg)` : "";
+        document.getElementById("footertile").style.backgroundImage = `url(${baseURL}/${hour2}/footertile_bg_rside.jpg)`;
+        document.getElementById("footer").style.backgroundImage = `url(${baseURL}/${hour}/footer_bg_rside.jpg)`;
+    }
+
+    function doFlip(flip) {
+        document.getElementById("footertile").style.transform =
+            document.getElementById("footer").style.transform = flip ? "scaleX(-1) scaleY(1)" : "scaleX(1) scaleY(1)";
+    }
+
+    let hour = new Date().getHours();
+    setHour(hour);
+
+    let flip = false;
+    doFlip(flip);
+
+    window.addEventListener('keydown', event => {
+        let right = event.key === "ArrowRight";
+        let left = event.key === "ArrowLeft";
+        let up = event.key === "ArrowUp";
+        if (right) {
+            hour += 1;
+        }
+        if (left) {
+            hour -= 1;
+        }
+        if (right || left) {
+            setHour(hour);
+        }
+        if (up) {
+            flip = !flip;
+            doFlip(flip);
+        }
+    })
+</script>
+</body>
+</html>
