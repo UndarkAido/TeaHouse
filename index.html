@@ -8,95 +8,213 @@
             margin: 0;
         }
 
-        div {
+        .version {
             position: fixed;
             width: 100%;
             height: 100%;
+        }
+
+        .image {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            transform-origin: top left;
             /* transition: all 2s ease; */
         }
 
-        #canvastile {
+        .notransition {
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            transition: none !important;
+        }
+
+        .canvastile_bg {
             background: #334029 repeat;
             overflow: hidden;
         }
 
-        #headertile {
+        .headertile_bg {
             background: transparent repeat-x;
         }
 
-        #header {
+        .header_bg {
             background: transparent no-repeat left top;
         }
 
-        #footertile {
+        .footertile_bg_rside {
             background: transparent repeat-x right bottom;
         }
 
-        #footer {
+        .footer_bg_rside {
             background: transparent no-repeat right bottom;
         }
     </style>
 </head>
 <body>
-<div id="canvastile"></div>
-<div id="headertile"></div>
-<div id="header"></div>
-<div id="footertile"></div>
-<div id="footer"></div>
 <script>
-    const baseURL = "https://ssl.gstatic.com/ui/v1/icons/mail/themes/teahouse";
+    //const baseURL = "https://ssl.gstatic.com/ui/v1/icons/mail/themes/teahouse";
+    const baseURL = "./teahouse";
+    let flip = false;
+    let house = true;
+    let fade = 1000;
+    let hour = new Date().getHours();
+    let slideshow = 5000;
+    let method = "realtime";
+    let transition = "ease";
+    let scale = 100;
+    scale /= 100;
+
+
+    const timemap = ["midnight", "midnight", "2am", "314am", "4am", "4am", "6am", "6am", "8am", "8am", "10am", "10am", "noon", "noon", "2pm", "2pm", "4pm", "4pm", "6pm", "6pm", "8pm", "8pm", "10pm", "10pm"];
+    const versions = ["midnight", "2am", "314am", "4am", "6am", "8am", "10am", "noon", "2pm", "4pm", "6pm", "8pm", "10pm"];
+    let envversions = Array.from(versions);
+    envversions[6] = envversions[5];
+    envversions[8] = envversions[7];
+
+    versions.forEach((v, i) => {
+        const category = document.createElement("div");
+        category.id = v;
+        category.className = "version";
+        ["canvastile_bg", "headertile_bg", "header_bg", "footertile_bg_rside", "footer_bg_rside"].forEach(name => {
+            if (!(v.startsWith("6") || v === "8pm") || name !== "header_bg") {
+                const element = document.createElement("div");
+                element.classList.add(name);
+                element.classList.add("image");
+                element.style.backgroundImage = `url(${baseURL}/${name === "footer_bg_rside" ? v : envversions[i]}/${name}.jpg)`;
+                element.style.transform = `scale(${scale})`;
+                element.style.height = element.style.width = `${100/scale}%`;
+                category.appendChild(element);
+            }
+        });
+        document.body.appendChild(category);
+    });
+
+    let lasthour = null;
+    let lock = false;
 
     function setHour(hour) {
-        hour = ((hour % 24) + 24) % 24;
-        if (hour !== 3) {
-            hour -= hour % 2;
+        if (lock) {
+            return false;
         }
-        let hour2 = hour !== 10 && hour !== 2 + 12 ? hour : hour - 2;
-
-        hour = hour === 3 ? "314am" : hour < 12 ? hour + "am" : hour - 12 + "pm";
-        hour2 = hour2 === 3 ? "314am" : hour2 < 12 ? hour2 + "am" : hour2 - 12 + "pm";
-
-        hour = hour === "0am" ? "midnight" : hour;
-        hour = hour === "0pm" ? "noon" : hour;
-        hour2 = hour2 === "0am" ? "midnight" : hour2;
-        hour2 = hour2 === "0pm" ? "noon" : hour2;
-
-        document.getElementById("canvastile").style.backgroundImage = `url(${baseURL}/${hour2}/canvastile_bg.jpg)`;
-        document.getElementById("headertile").style.backgroundImage = `url(${baseURL}/${hour2}/headertile_bg.jpg)`;
-        document.getElementById("header").style.backgroundImage = hour2 !== "6am" && hour2 !== "6pm" && hour2 !== "8pm" ? `url(${baseURL}/${hour2}/header_bg.jpg)` : "";
-        document.getElementById("footertile").style.backgroundImage = `url(${baseURL}/${hour2}/footertile_bg_rside.jpg)`;
-        document.getElementById("footer").style.backgroundImage = `url(${baseURL}/${hour}/footer_bg_rside.jpg)`;
+        hour = ((hour % 24) + 24) % 24;
+        if (lasthour === null) {
+            Array.from(document.getElementsByClassName("version")).forEach(e => e.style.zIndex = "0");
+        }
+        let e = document.getElementById(timemap[hour]);
+        if (e === lasthour) {
+            return true;
+        }
+        lock = true;
+        if (lasthour !== null) {
+            lasthour.style.zIndex = "2";
+            lasthour.style.opacity = "0%";
+        }
+        //e.style.transition = ``
+        e.style.zIndex = "1";
+        if (lasthour === null) {
+            Array.from(document.getElementsByClassName("version")).forEach(e => e.style.transition = `opacity ${fade}ms ${transition}`);
+            lasthour = e;
+            lock = false;
+        } else {
+            setTimeout(() => {
+                lasthour.style.zIndex = "0";
+                lasthour.classList.add('notransition');
+                lasthour.style.opacity = "100%";
+                lasthour.offsetHeight;
+                lasthour.classList.remove('notransition');
+                lasthour = e;
+                lock = false;
+            }, fade)
+        }
+        return true;
     }
 
     function doFlip(flip) {
-        document.getElementById("footertile").style.transform =
-            document.getElementById("footer").style.transform = flip ? "scaleX(-1) scaleY(1)" : "scaleX(1) scaleY(1)";
+        Array.from(document.getElementsByClassName("footertile_bg_rside"))
+            .concat(Array.from(document.getElementsByClassName("footer_bg_rside")))
+            .forEach(e => {
+                if(flip) {
+                    e.style.transform = `scale(-${scale}, ${scale}) translateX(-100%)`;
+                }else{
+                    e.style.transform = `scale(${scale})`;
+                }
+            });
     }
 
-    let hour = new Date().getHours();
+    function showHouse(house) {
+        Array.from(document.getElementsByClassName("footer_bg_rside"))
+            .forEach(e => e.style.display = house ? "block" : "none");
+    }
+
     setHour(hour);
 
-    let flip = false;
     doFlip(flip);
+    showHouse(house);
 
     window.addEventListener('keydown', event => {
+        let oldhour = hour;
+
         let right = event.key === "ArrowRight";
         let left = event.key === "ArrowLeft";
         let up = event.key === "ArrowUp";
+        let down = event.key === "ArrowDown";
         if (right) {
             hour += 1;
+            if (hour !== 3 && oldhour !== 3) {
+                hour += 1;
+            }
         }
         if (left) {
             hour -= 1;
+            if (hour !== 3 && oldhour !== 3) {
+                hour -= 1;
+            }
         }
         if (right || left) {
-            setHour(hour);
+            hour = ((hour % 24) + 24) % 24;
+            if (!setHour(hour)) {
+                hour = oldhour;
+            }
         }
         if (up) {
             flip = !flip;
             doFlip(flip);
         }
+        if (down) {
+            house = !house;
+            showHouse(house);
+        }
     })
+
+    function nextSlide(){
+        setTimeout(() => {
+            let oldhour = hour;
+            hour += 1;
+            if (hour !== 3 && oldhour !== 3) {
+                hour += 1;
+            }
+            hour = ((hour % 24) + 24) % 24;
+            if (!setHour(hour)) {
+                hour = oldhour;
+            }
+            nextSlide();
+        }, slideshow);
+    }
+    if(method === "slideshow"){
+        nextSlide();
+    }
+
+    function nextNow(){
+        setTimeout(() => {
+            hour = new Date().getHours();
+            setHour(hour);
+            nextNow();
+        }, 3600000 - new Date().getTime() % 3600000);
+    }
+    if(method === "realtime"){
+        nextNow();
+    }
 </script>
 </body>
 </html>
